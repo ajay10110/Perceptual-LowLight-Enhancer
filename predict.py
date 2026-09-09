@@ -24,11 +24,17 @@ def enhance_image(image_path, model_path, output_path):
     img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
-    # Keep original dimensions to resize back later if needed, but model expects multiples of some factor 
-    # For a standard U-Net, usually 256x256 or resizing to a fixed size is easiest for inference.
-    # We will resize to 256x256 as used in training, but you can adjust this.
+    # U-Nets are fully convolutional, meaning they can process any image size!
+    # The only rule is that the width and height must be divisible by 16 
+    # (because the network shrinks the image in half 4 times: 2^4 = 16).
     original_size = (img.shape[1], img.shape[0])
-    img_resized = cv2.resize(img, (256, 256))
+    
+    # Calculate the nearest dimensions that are divisible by 16
+    h, w = img.shape[:2]
+    new_h = (h // 16) * 16
+    new_w = (w // 16) * 16
+    
+    img_resized = cv2.resize(img, (new_w, new_h))
     
     # Normalize to [0, 1] exactly like we did in training
     img_normalized = img_resized.astype(np.float32) / 255.0
