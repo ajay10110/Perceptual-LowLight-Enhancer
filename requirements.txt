@@ -1,0 +1,31 @@
+# Core scientific libraries
+numpy
+scipy
+pandas
+
+# Deep learning
+tensorflow==2.14.0
+keras==2.14.0
+
+# Image processing & I/O
+opencv-python==4.8.1.78
+Pillow==10.0.1
+scikit-image==0.21.0
+
+# Visualization & progress
+matplotlib==3.8.2
+tqdm==4.66.1
+seaborn==0.12.2
+
+# Jupyter / notebooks
+jupyter==1.0.0
+notebook==7.0.1
+ipykernel==6.27.0
+nbconvert==7.4.0
+
+# Model storage
+h5py==3.9.0
+
+# Optional monitoring / testing
+tensorboard==2.14.0
+pytest==7.4.0

@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Models and large files
+models/
+data/
+results/
+*.keras
+*.h5
+
+# OS generated files
+.DS_Store
+Thumbs.db
