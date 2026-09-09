@@ -28,33 +28,47 @@ def enhance_image(image_path, model_path, output_path):
     
     # The model was hardcoded to accept exactly 256x256 images.
     # To process high-definition images without squishing them (which causes pixelation),
-    # we must slice the image into a grid of 256x256 patches, enhance each patch, and stitch them back together!
+    # and without grid-lines (which happens in pure tiling), we use overlapping patches
+    # and smoothly blend them together using a 2D Bartlett window.
     patch_size = 256
+    step = 128  # 50% overlap for smooth blending
     h, w, c = img.shape
     
-    # Pad the image so it fits perfectly into a 256x256 grid
-    pad_h = (patch_size - h % patch_size) % patch_size
-    pad_w = (patch_size - w % patch_size) % patch_size
+    # Pad the image so it fits the overlapping grid perfectly
+    pad_h = (step - (h - patch_size) % step) % step if h > patch_size else patch_size - h
+    pad_w = (step - (w - patch_size) % step) % step if w > patch_size else patch_size - w
     img_padded = np.pad(img, ((0, pad_h), (0, pad_w), (0, 0)), mode='reflect')
     
     # Normalize to [0, 1]
     img_normalized = img_padded.astype(np.float32) / 255.0
     
-    # Create an empty canvas for the enhanced image
-    enhanced_padded = np.zeros_like(img_normalized)
+    # Create empty canvases for the enhanced image and the blending weights
+    enhanced_sum = np.zeros_like(img_normalized)
+    weight_sum = np.zeros_like(img_normalized)
     
-    rows = img_padded.shape[0] // patch_size
-    cols = img_padded.shape[1] // patch_size
-    print(f"Enhancing high-res image by processing a {rows}x{cols} grid of patches...")
+    # Create a 2D Bartlett window for smooth fading at the edges of each patch
+    window_1d = np.bartlett(patch_size)
+    window_2d = np.outer(window_1d, window_1d)
+    window_2d = np.expand_dims(window_2d, axis=-1)
     
-    for i in range(0, img_padded.shape[0], patch_size):
-        for j in range(0, img_padded.shape[1], patch_size):
+    rows = (img_padded.shape[0] - patch_size) // step + 1
+    cols = (img_padded.shape[1] - patch_size) // step + 1
+    print(f"Enhancing high-res image with smooth overlapping patches ({rows}x{cols} grid)...")
+    
+    for i in range(0, img_padded.shape[0] - patch_size + 1, step):
+        for j in range(0, img_padded.shape[1] - patch_size + 1, step):
             patch = img_normalized[i:i+patch_size, j:j+patch_size]
             patch_input = np.expand_dims(patch, axis=0)
             
             # Enhance this specific patch
             pred_patch = model.predict(patch_input, verbose=0)[0]
-            enhanced_padded[i:i+patch_size, j:j+patch_size] = pred_patch
+            
+            # Blend it into the main canvas using the weight window
+            enhanced_sum[i:i+patch_size, j:j+patch_size] += pred_patch * window_2d
+            weight_sum[i:i+patch_size, j:j+patch_size] += window_2d
+            
+    # Normalize the final image by the overlapping weights
+    enhanced_padded = enhanced_sum / (weight_sum + 1e-8)
             
     # Crop the padding off to return to the exact original size
     prediction = enhanced_padded[:h, :w, :]
