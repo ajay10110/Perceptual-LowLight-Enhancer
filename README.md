@@ -6,10 +6,12 @@ A deep learning project designed to enhance dark, low-light, and noisy images us
 - **Custom U-Net Architecture:** Built from scratch with an encoder-decoder structure and skip connections to preserve high-frequency spatial details.
 - **VGG19 Perceptual Loss:** Extracts feature maps from a pre-trained VGG19 network (`block2_conv2` and `block3_conv4`) to heavily penalize blurry or structurally inaccurate enhancements.
 - **Color Alignment Loss:** A statistical loss function that forces the model to match the mean and standard deviation of the color distributions, preventing the washed-out look common in low-light enhancement.
+- **High-Resolution Inference:** Features a custom `predict.py` script that utilizes overlapping patch-based processing and 2D Bartlett window blending. This allows a model trained on 256x256 patches to seamlessly enhance 4K images without grid-line artifacts or GPU memory overflows.
 - **Automated Pipeline:** Contains a fully parameterized Python pipeline (`run_full_experiment.py`) for training, validating, and executing hyperparameter tuning.
 
 ## 📁 Repository Structure
 - `run_full_experiment.py`: The core execution script. Handles dataset verification, multi-stage training, and evaluation.
+- `predict.py`: Inference script for enhancing custom high-resolution images using overlapping patches and Bartlett window blending.
 - `create_notebooks.py`: Generates Jupyter notebooks for step-by-step experimentation and visualization.
 - `notebooks/`: Contains the generated exploratory notebooks.
 - `requirements.txt`: Python environment dependencies.
@@ -49,6 +51,13 @@ python run_full_experiment.py --evaluate
 ```
 
 All trained `.keras` checkpoints, training logs (CSV), and evaluation image outputs are automatically saved to the `models/training_runs/` directory.
+
+### 3. High-Resolution Inference (Custom Images)
+To enhance your own dark images (including 4K/high-res photos), use the dedicated prediction script. This script automatically slices the image, applies the enhancement, and blends it back together seamlessly.
+
+```bash
+python predict.py --image path/to/your/dark_image.jpg --model models/best_model_fresh_500.keras
+```
 
 ## 📈 Evaluation Metrics
 The pipeline automatically evaluates all models using standard image reconstruction metrics:
