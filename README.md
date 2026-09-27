@@ -64,3 +64,8 @@ The pipeline automatically evaluates all models using standard image reconstruct
 - **PSNR** (Peak Signal-to-Noise Ratio)
 - **SSIM** (Structural Similarity Index)
 - **MSE** (Mean Squared Error)
+
+## 📊 Training Convergence
+Below is the training and validation loss curve over 500 epochs for the final perceptual model. The smooth convergence demonstrates the effectiveness of the hybrid loss function.
+
+![Training Loss Plot](docs/training_log_plot.png)
